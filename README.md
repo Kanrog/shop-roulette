@@ -2,7 +2,7 @@
 
 A single-page website with one button that sends you to a random product listing on AliExpress. No algorithm, no recommendations — just chaos.
 
-**[Try it →](https://your-username.github.io/your-repo/)**
+**[Try it →](https://kanrog.github.io/shop-roulette/)**
 
 ## How it works
 
