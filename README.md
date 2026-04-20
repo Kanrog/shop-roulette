@@ -37,6 +37,6 @@ You can easily customize the pool of random words!
 The UI features a stylized, cyber/synthwave aesthetic with CSS grid noise, ambient background glows, and a simulated terminal ticker to give it that "hacking the mainframe" feel before tossing you into a storefront.
 
 ##  Disclaimer
-I am an AliExpress/Amazon affiliate, but this specific site and the links it generates **do not append any affiliate tracking codes**. I receive no financial incentive from the randomized redirects. 
+I am an AliExpress affiliate, but this specific site and the links it generates **do not append any affiliate tracking codes**. I receive no financial incentive from the randomized redirects. 
 
 The site and tool is not affiliated with, endorsed by, or related to AliExpress, Amazon, or Alibaba Group in any way. Pure fun, no warranty, just vibes.
