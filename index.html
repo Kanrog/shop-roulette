@@ -109,9 +109,61 @@
       color: var(--muted);
       letter-spacing: 0.1em;
       text-align: center;
-      margin-bottom: 3.5rem;
+      margin-bottom: 2.5rem;
       font-style: italic;
       animation: fadeUp 0.6s 0.2s ease both;
+    }
+
+    /* checkboxes */
+    .options-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      justify-content: center;
+      margin-bottom: 2rem;
+      animation: fadeUp 0.6s 0.25s ease both;
+    }
+
+    .check-label {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      text-transform: uppercase;
+    }
+
+    .check-label input[type="checkbox"] {
+      appearance: none;
+      background-color: rgba(124,58,237,0.1);
+      margin: 0;
+      font: inherit;
+      color: currentColor;
+      width: 16px;
+      height: 16px;
+      border: 1px solid var(--purple-l);
+      border-radius: 3px;
+      display: grid;
+      place-content: center;
+      cursor: pointer;
+    }
+
+    .check-label input[type="checkbox"]::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      transform: scale(0);
+      transition: 120ms transform ease-in-out;
+      box-shadow: inset 1em 1em var(--purple-ll);
+      background-color: var(--purple-ll);
+      transform-origin: center;
+      clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+    }
+
+    .check-label input[type="checkbox"]:checked::before {
+      transform: scale(1);
     }
 
     /* button group */
@@ -323,6 +375,18 @@
     </h1>
     <p class="tagline">you don't know what you need until the algorithm decides</p>
 
+    <div class="options-group">
+      <label class="check-label">
+        <input type="checkbox" id="chk-ali"> AliExpress
+      </label>
+      <label class="check-label">
+        <input type="checkbox" id="chk-amz"> Amazon
+      </label>
+      <label class="check-label">
+        <input type="checkbox" id="chk-rnd" checked> Random
+      </label>
+    </div>
+
     <div class="btn-group">
       <div class="btn-outer">
         <div class="btn-glow"></div>
@@ -360,7 +424,7 @@
     </div>
   </main>
 
-  <footer class="footer">not affiliated with any marketplace &mdash; just vibes</footer>
+  <footer class="footer">This is meant as a fun thing to do when you are bored and is not affiliated with any marketplace &mdash; just for the vibes</footer>
 
   <script>
     const btn      = document.getElementById('goBtn');
@@ -369,6 +433,28 @@
     const dot      = document.getElementById('dot');
     const rollEl   = document.getElementById('rollCount');
     const lastIdEl = document.getElementById('lastId');
+
+    const chkAli = document.getElementById('chk-ali');
+    const chkAmz = document.getElementById('chk-amz');
+    const chkRnd = document.getElementById('chk-rnd');
+    const allChks = [chkAli, chkAmz, chkRnd];
+
+    // Ensure only one checkbox is checked at a time
+    allChks.forEach(chk => {
+      chk.addEventListener('change', function() {
+        if (this.checked) {
+          allChks.forEach(c => {
+            if (c !== this) c.checked = false;
+          });
+        } else {
+          // If the user tries to uncheck the only checked box, force it back on
+          const anyChecked = allChks.some(c => c.checked);
+          if (!anyChecked) {
+            this.checked = true;
+          }
+        }
+      });
+    });
 
     const messages = [
       'generating search query...',
@@ -431,6 +517,22 @@
       return wordList[Math.floor(Math.random() * wordList.length)];
     }
 
+    function getStoreUrl(query) {
+      let store = 'rnd';
+      if (chkAli.checked) store = 'ali';
+      if (chkAmz.checked) store = 'amz';
+
+      if (store === 'rnd') {
+        store = Math.random() > 0.5 ? 'ali' : 'amz';
+      }
+
+      if (store === 'ali') {
+        return 'https://www.aliexpress.com/wholesale?SearchText=' + encodeURIComponent(query);
+      } else {
+        return 'https://www.amazon.com/s?k=' + encodeURIComponent(query);
+      }
+    }
+
     btn.addEventListener('click', () => {
       if (btn.classList.contains('spinning') || btnDouble.classList.contains('spinning')) return;
 
@@ -440,8 +542,7 @@
       ticker.classList.add('lit');
 
       const word = getRandomWord();
-      // Generate standard AliExpress search URL
-      const url = 'https://www.aliexpress.com/wholesale?SearchText=' + encodeURIComponent(word);
+      const url = getStoreUrl(word);
 
       setTimeout(() => {
         rolls++;
@@ -476,8 +577,7 @@
       }
       
       const combinedWords = word1 + " " + word2;
-      // Generate standard AliExpress search URL
-      const url = 'https://www.aliexpress.com/wholesale?SearchText=' + encodeURIComponent(combinedWords);
+      const url = getStoreUrl(combinedWords);
 
       setTimeout(() => {
         rolls++;
