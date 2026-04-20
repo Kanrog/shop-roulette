@@ -348,8 +348,6 @@
     const rollEl   = document.getElementById('rollCount');
     const lastIdEl = document.getElementById('lastId');
 
-    let rolls = 0;
-
     const messages = [
       'generating product id...',
       'consulting the algorithm...',
@@ -363,12 +361,33 @@
       'contacting the void...',
     ];
 
+    // Ranges based on observed real product IDs (e.g. 1005007022552155, 1005009432172997)
     const idRanges = [
-      [1005001000000000n, 1005006999999999n],
-      [1005003000000000n, 1005005999999999n],
-      [32000000000000n,   33999999999999n],
-      [4000000000000n,    4999999999999n],
+      [1005007000000000n, 1005007999999999n],
+      [1005008000000000n, 1005008999999999n],
+      [1005009000000000n, 1005009999999999n],
     ];
+
+    // Cookie helpers
+    function getCookie(name) {
+      const match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+      return match ? decodeURIComponent(match[1]) : null;
+    }
+
+    function setCookie(name, value) {
+      const expires = new Date();
+      expires.setFullYear(expires.getFullYear() + 1);
+      document.cookie = name + '=' + encodeURIComponent(value) + '; expires=' + expires.toUTCString() + '; path=/; SameSite=Lax';
+    }
+
+    // Restore roll count from cookie on page load
+    let rolls = parseInt(getCookie('msr_rolls') || '0', 10);
+    rollEl.textContent = rolls;
+    if (rolls > 0) {
+      ticker.textContent = 'welcome back. ready for roll #' + (rolls + 1) + '\u2026';
+      const lastId = getCookie('msr_last_id');
+      if (lastId) lastIdEl.textContent = formatId(lastId);
+    }
 
     function randomBigInt(min, max) {
       const range = max - min;
@@ -392,7 +411,7 @@
 
     function formatId(id) {
       if (id.length <= 6) return id;
-      return id.slice(0, 4) + '…' + id.slice(-4);
+      return id.slice(0, 4) + '\u2026' + id.slice(-4);
     }
 
     btn.addEventListener('click', () => {
@@ -413,13 +432,12 @@
         ticker.textContent = 'id: ' + id;
         btn.classList.remove('spinning');
 
-        setTimeout(() => {
-          dot.classList.remove('active');
-          ticker.classList.remove('lit');
-          ticker.textContent = 'ready for another roll…';
-        }, 3000);
+        // Persist to cookies before navigating away
+        setCookie('msr_rolls', rolls);
+        setCookie('msr_last_id', id);
 
-        window.open(url, '_blank');
+        // Same-tab navigation so user can press Back to return
+        window.location.href = url;
       }, 450);
     });
   </script>
