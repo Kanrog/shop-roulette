@@ -300,7 +300,7 @@
 </head>
 <body>
   <main class="page">
-    <span class="top-label">v1.0 &mdash; proceed with curiosity</span>
+    <span class="top-label">v1.1 &mdash; proceed with curiosity</span>
 
     <h1 class="headline">
       <span class="word1">MYSTERY</span>
@@ -326,7 +326,7 @@
       </div>
       <div class="stat">
         <span class="stat-num" id="lastId">&mdash;</span>
-        <span class="stat-label">last id</span>
+        <span class="stat-label">last search</span>
       </div>
     </div>
 
@@ -349,7 +349,7 @@
     const lastIdEl = document.getElementById('lastId');
 
     const messages = [
-      'generating product id...',
+      'generating search query...',
       'consulting the algorithm...',
       'rolling the dice...',
       'pinging the warehouse...',
@@ -361,19 +361,28 @@
       'contacting the void...',
     ];
 
-    // Ranges based on observed real product IDs (e.g. 1005007022552155, 1005009432172997)
-    // Known-good real product IDs used as anchors. We pick one at random and
-    // apply a small offset — neighbouring IDs are far more likely to be live
-    // listings than shooting blindly across a trillion-wide number space.
-    const seedIds = [
-      1005007066724295n,
-      1005010573437198n,
-      1005008899064959n,
-      1005006285768946n,
-      1005007022552155n,
-      1005009432172997n,
+    // Fallback list just in case words.txt fails to load
+    let wordList = [
+      "weird gadget",
+      "desk toy",
+      "cyberpunk accessory",
+      "retro console",
+      "useless machine"
     ];
-    const SPREAD = 50000n;
+
+    // Fetch the external text file and split it into an array
+    fetch('words.txt')
+      .then(response => {
+        if (!response.ok) throw new Error('Network response was not ok');
+        return response.text();
+      })
+      .then(text => {
+        // Split by lines, remove empty spaces and empty lines
+        wordList = text.split('\n').map(word => word.trim()).filter(word => word.length > 0);
+      })
+      .catch(err => {
+        console.warn("Could not load words.txt, using fallback list.", err);
+      });
 
     // Cookie helpers
     function getCookie(name) {
@@ -392,19 +401,12 @@
     rollEl.textContent = rolls;
     if (rolls > 0) {
       ticker.textContent = 'welcome back. ready for roll #' + (rolls + 1) + '\u2026';
-      const lastId = getCookie('msr_last_id');
-      if (lastId) lastIdEl.textContent = formatId(lastId);
+      const lastWord = getCookie('msr_last_word');
+      if (lastWord) lastIdEl.textContent = lastWord;
     }
 
-    function getRandomId() {
-      const seed   = seedIds[Math.floor(Math.random() * seedIds.length)];
-      const offset = BigInt(Math.floor(Math.random() * Number(SPREAD * 2n))) - SPREAD;
-      return (seed + offset).toString();
-    }
-
-    function formatId(id) {
-      if (id.length <= 6) return id;
-      return id.slice(0, 4) + '\u2026' + id.slice(-4);
+    function getRandomWord() {
+      return wordList[Math.floor(Math.random() * wordList.length)];
     }
 
     btn.addEventListener('click', () => {
@@ -415,19 +417,20 @@
       ticker.textContent = messages[Math.floor(Math.random() * messages.length)];
       ticker.classList.add('lit');
 
-      const id = getRandomId();
-      const url = 'https://www.aliexpress.com/item/' + id + '.html';
+      const word = getRandomWord();
+      // Generate standard AliExpress search URL
+      const url = 'https://www.aliexpress.com/wholesale?SearchText=' + encodeURIComponent(word);
 
       setTimeout(() => {
         rolls++;
         rollEl.textContent = rolls;
-        lastIdEl.textContent = formatId(id);
-        ticker.textContent = 'id: ' + id;
+        lastIdEl.textContent = word;
+        ticker.textContent = 'search: ' + word;
         btn.classList.remove('spinning');
 
         // Persist to cookies before navigating away
         setCookie('msr_rolls', rolls);
-        setCookie('msr_last_id', id);
+        setCookie('msr_last_word', word);
 
         // Same-tab navigation so user can press Back to return
         window.location.href = url;
