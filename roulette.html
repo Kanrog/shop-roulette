@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mystery Shop Roulette</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0d0a1a;
+      --bg2:       #160f2e;
+      --bg3:       #1f1540;
+      --purple:    #7c3aed;
+      --purple-l:  #a855f7;
+      --purple-ll: #d8b4fe;
+      --purple-d:  #4c1d95;
+      --cream:     #faf5ff;
+      --muted:     #8b7aa8;
+      --border:    rgba(168, 85, 247, 0.2);
+      --shadow:    rgba(124, 58, 237, 0.4);
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--cream);
+      font-family: 'DM Mono', monospace;
+      overflow-x: hidden;
+    }
+
+    /* grid noise background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(124,58,237,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(124,58,237,0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ambient glow */
+    body::after {
+      content: '';
+      position: fixed;
+      top: -20%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(124,58,237,0.15) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .page {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1.5rem;
+      gap: 0;
+    }
+
+    /* top label */
+    .top-label {
+      font-size: 10px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 2rem;
+      border: 1px solid var(--border);
+      padding: 5px 14px;
+      border-radius: 2px;
+      animation: fadeUp 0.6s ease both;
+    }
+
+    /* headline */
+    .headline {
+      font-family: 'Unbounded', sans-serif;
+      font-weight: 900;
+      font-size: clamp(2.4rem, 10vw, 5.5rem);
+      line-height: 0.95;
+      text-align: center;
+      letter-spacing: -2px;
+      margin-bottom: 0.6rem;
+      animation: fadeUp 0.6s 0.1s ease both;
+    }
+
+    .headline .word1 { color: var(--cream); display: block; }
+    .headline .word2 {
+      display: block;
+      color: transparent;
+      -webkit-text-stroke: 2px var(--purple-l);
+    }
+    .headline .word3 { color: var(--purple-l); display: block; }
+
+    .tagline {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-align: center;
+      margin-bottom: 3.5rem;
+      font-style: italic;
+      animation: fadeUp 0.6s 0.2s ease both;
+    }
+
+    /* the button */
+    .btn-outer {
+      position: relative;
+      animation: fadeUp 0.6s 0.3s ease both;
+      margin-bottom: 2.5rem;
+    }
+
+    .btn-glow {
+      position: absolute;
+      inset: -2px;
+      border-radius: 4px;
+      background: linear-gradient(135deg, var(--purple), var(--purple-l), var(--purple));
+      background-size: 200% 200%;
+      animation: gradShift 3s ease infinite;
+      filter: blur(1px);
+      z-index: 0;
+    }
+
+    @keyframes gradShift {
+      0%, 100% { background-position: 0% 50%; }
+      50%       { background-position: 100% 50%; }
+    }
+
+    .big-btn {
+      position: relative;
+      z-index: 1;
+      display: block;
+      background: var(--bg2);
+      color: var(--cream);
+      border: none;
+      border-radius: 3px;
+      font-family: 'Unbounded', sans-serif;
+      font-weight: 700;
+      font-size: clamp(1rem, 3vw, 1.5rem);
+      letter-spacing: 0.05em;
+      padding: 1.1rem 3.5rem;
+      cursor: pointer;
+      transition: transform 0.12s ease, background 0.12s ease;
+      white-space: nowrap;
+    }
+
+    .big-btn:hover {
+      background: var(--bg3);
+      transform: scale(1.03);
+    }
+
+    .big-btn:active {
+      transform: scale(0.97);
+    }
+
+    .big-btn.spinning {
+      pointer-events: none;
+      animation: pulse 0.4s ease;
+    }
+
+    @keyframes pulse {
+      0%   { transform: scale(1); }
+      30%  { transform: scale(0.95); }
+      60%  { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+
+    /* ticker */
+    .ticker-box {
+      width: 100%;
+      max-width: 480px;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      background: rgba(124,58,237,0.05);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 44px;
+      animation: fadeUp 0.6s 0.4s ease both;
+    }
+
+    .ticker-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--muted);
+      flex-shrink: 0;
+      transition: background 0.2s;
+    }
+
+    .ticker-dot.active {
+      background: var(--purple-l);
+      box-shadow: 0 0 6px var(--purple-l);
+      animation: blink 0.6s ease infinite alternate;
+    }
+
+    @keyframes blink {
+      from { opacity: 1; }
+      to   { opacity: 0.4; }
+    }
+
+    .ticker-text {
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      text-transform: uppercase;
+      flex: 1;
+    }
+
+    .ticker-text.lit {
+      color: var(--purple-ll);
+    }
+
+    /* stats row */
+    .stats-row {
+      display: flex;
+      gap: 2rem;
+      margin-top: 2.5rem;
+      animation: fadeUp 0.6s 0.5s ease both;
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat-num {
+      font-family: 'Unbounded', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--purple-l);
+      display: block;
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 9px;
+      letter-spacing: 0.15em;
+      color: var(--muted);
+      text-transform: uppercase;
+      display: block;
+      margin-top: 4px;
+    }
+
+    /* tags */
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 2.5rem;
+      max-width: 440px;
+      animation: fadeUp 0.6s 0.6s ease both;
+    }
+
+    .tag {
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 4px 10px;
+      border-radius: 2px;
+    }
+
+    /* footer */
+    .footer {
+      position: fixed;
+      bottom: 1.2rem;
+      left: 0; right: 0;
+      text-align: center;
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      opacity: 0.5;
+      text-transform: uppercase;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 480px) {
+      .headline .word2 { -webkit-text-stroke: 1.5px var(--purple-l); }
+      .stats-row { gap: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <span class="top-label">v1.0 &mdash; proceed with curiosity</span>
+
+    <h1 class="headline">
+      <span class="word1">MYSTERY</span>
+      <span class="word2">SHOP</span>
+      <span class="word3">ROULETTE</span>
+    </h1>
+    <p class="tagline">you don't know what you need until the algorithm decides</p>
+
+    <div class="btn-outer">
+      <div class="btn-glow"></div>
+      <button class="big-btn" id="goBtn">TAKE ME SOMEWHERE</button>
+    </div>
+
+    <div class="ticker-box">
+      <div class="ticker-dot" id="dot"></div>
+      <span class="ticker-text" id="ticker">awaiting launch&hellip;</span>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat">
+        <span class="stat-num" id="rollCount">0</span>
+        <span class="stat-label">rolls</span>
+      </div>
+      <div class="stat">
+        <span class="stat-num" id="lastId">&mdash;</span>
+        <span class="stat-label">last id</span>
+      </div>
+    </div>
+
+    <div class="tags">
+      <span class="tag">free shipping (maybe)</span>
+      <span class="tag">ships in 30–90 days</span>
+      <span class="tag">5&#9733; or 0&#9733;</span>
+      <span class="tag">no refunds vibes</span>
+      <span class="tag">mystery guaranteed</span>
+    </div>
+  </main>
+
+  <footer class="footer">not affiliated with any marketplace &mdash; just vibes</footer>
+
+  <script>
+    const btn      = document.getElementById('goBtn');
+    const ticker   = document.getElementById('ticker');
+    const dot      = document.getElementById('dot');
+    const rollEl   = document.getElementById('rollCount');
+    const lastIdEl = document.getElementById('lastId');
+
+    let rolls = 0;
+
+    const messages = [
+      'generating product id...',
+      'consulting the algorithm...',
+      'rolling the dice...',
+      'pinging the warehouse...',
+      'mystery incoming...',
+      'opening a portal...',
+      'it could be anything...',
+      'fate has decided...',
+      'hold on to your wallet...',
+      'contacting the void...',
+    ];
+
+    const idRanges = [
+      [1005001000000000n, 1005006999999999n],
+      [1005003000000000n, 1005005999999999n],
+      [32000000000000n,   33999999999999n],
+      [4000000000000n,    4999999999999n],
+    ];
+
+    function randomBigInt(min, max) {
+      const range = max - min;
+      const bits  = range.toString(2).length;
+      let result;
+      do {
+        let rand = 0n;
+        for (let i = 0; i < bits; i += 32) {
+          rand = (rand << 32n) | BigInt(Math.floor(Math.random() * 0x100000000));
+        }
+        rand = rand & ((1n << BigInt(bits)) - 1n);
+        result = min + rand;
+      } while (result > max);
+      return result;
+    }
+
+    function getRandomId() {
+      const [min, max] = idRanges[Math.floor(Math.random() * idRanges.length)];
+      return randomBigInt(min, max).toString();
+    }
+
+    function formatId(id) {
+      if (id.length <= 6) return id;
+      return id.slice(0, 4) + '…' + id.slice(-4);
+    }
+
+    btn.addEventListener('click', () => {
+      if (btn.classList.contains('spinning')) return;
+
+      btn.classList.add('spinning');
+      dot.classList.add('active');
+      ticker.textContent = messages[Math.floor(Math.random() * messages.length)];
+      ticker.classList.add('lit');
+
+      const id = getRandomId();
+      const url = 'https://www.aliexpress.com/item/' + id + '.html';
+
+      setTimeout(() => {
+        rolls++;
+        rollEl.textContent = rolls;
+        lastIdEl.textContent = formatId(id);
+        ticker.textContent = 'id: ' + id;
+        btn.classList.remove('spinning');
+
+        setTimeout(() => {
+          dot.classList.remove('active');
+          ticker.classList.remove('lit');
+          ticker.textContent = 'ready for another roll…';
+        }, 3000);
+
+        window.open(url, '_blank');
+      }, 450);
+    });
+  </script>
+</body>
+</html>
