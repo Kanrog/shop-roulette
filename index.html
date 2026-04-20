@@ -362,11 +362,18 @@
     ];
 
     // Ranges based on observed real product IDs (e.g. 1005007022552155, 1005009432172997)
-    const idRanges = [
-      [1005007000000000n, 1005007999999999n],
-      [1005008000000000n, 1005008999999999n],
-      [1005009000000000n, 1005009999999999n],
+    // Known-good real product IDs used as anchors. We pick one at random and
+    // apply a small offset — neighbouring IDs are far more likely to be live
+    // listings than shooting blindly across a trillion-wide number space.
+    const seedIds = [
+      1005007066724295n,
+      1005010573437198n,
+      1005008899064959n,
+      1005006285768946n,
+      1005007022552155n,
+      1005009432172997n,
     ];
+    const SPREAD = 50000n;
 
     // Cookie helpers
     function getCookie(name) {
@@ -389,24 +396,10 @@
       if (lastId) lastIdEl.textContent = formatId(lastId);
     }
 
-    function randomBigInt(min, max) {
-      const range = max - min;
-      const bits  = range.toString(2).length;
-      let result;
-      do {
-        let rand = 0n;
-        for (let i = 0; i < bits; i += 32) {
-          rand = (rand << 32n) | BigInt(Math.floor(Math.random() * 0x100000000));
-        }
-        rand = rand & ((1n << BigInt(bits)) - 1n);
-        result = min + rand;
-      } while (result > max);
-      return result;
-    }
-
     function getRandomId() {
-      const [min, max] = idRanges[Math.floor(Math.random() * idRanges.length)];
-      return randomBigInt(min, max).toString();
+      const seed   = seedIds[Math.floor(Math.random() * seedIds.length)];
+      const offset = BigInt(Math.floor(Math.random() * Number(SPREAD * 2n))) - SPREAD;
+      return (seed + offset).toString();
     }
 
     function formatId(id) {
